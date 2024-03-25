@@ -10,9 +10,14 @@ if [ -f "$REPO_DIR"/pyproject.toml ]; then
         sed '$s/.$//' | \
         tr '\n' ' ' | \
         sed 's/ \{2,\}/ /g')
+
+        # Unused, removes single speech marks
+        # sed 's/"//g' | \
+
 else
     echo "Could not locate input file: pyproject.toml"; exit 1
 fi
 
-# Returns: "3.11", "3.10", "3.9"
-echo "$TOML_VERS"
+# DISABLED Returns: "3.11", "3.10", "3.9"
+# Returns: [ "3.11", "3.10", "3.9" ]
+echo "[ $TOML_VERS ]"

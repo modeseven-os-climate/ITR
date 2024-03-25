@@ -11,7 +11,7 @@ on:
       - "!update-devops-tooling"
 
 jobs:
-  get-matrix-versions:
+  determine-matrix-versions:
     runs-on: "ubuntu-latest"
     # Don't run when pull request is merged
     if: github.event.pull_request.merged == false
@@ -29,8 +29,8 @@ jobs:
           echo "Matrix versions extracted from pyproject.toml: $pyversions"
           echo "matrix_versions=${pyversions}" >> "$GITHUB_OUTPUT"
 
-  pre-release:
-    needs: [get-matrix-versions]
+  run-builds:
+    needs: [determine-matrix-versions]
     runs-on: "ubuntu-latest"
     continue-on-error: true
     # Don't run when pull request is merged
@@ -38,8 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # yamllint disable-line rule:line-length
-        python-version: ["${{ needs.get-matrix-versions.outputs.pyversions }}"]
+        python-version: ${{ needs.determine-matrix-versions.outputs.pyversions }}
 
     steps:
       - name: "Populate environment variables"
