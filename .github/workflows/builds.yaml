@@ -12,6 +12,8 @@ on:
 
 jobs:
   parse-project-metadata:
+    name: "Extract build metadata"
+
     runs-on: "ubuntu-latest"
     # Don't run when pull request is merged
     if: github.event.pull_request.merged == false
@@ -23,24 +25,19 @@ jobs:
         uses: actions/checkout@v4
 
       - id: fetch-python-versions
+        name: "Determine Python versions for matrix jobs"
         run: |
           data=$(scripts/python-matrix-versions.sh double brackets)
           echo "Matrix versions extracted from pyproject.toml: $data"
           matrix="{\"python-version\": $data}"
-          echo "JSON object: $matrix"
-          echo "JQ parsed/formatted:"
+          echo "Pretty formatted:"
           if ! (echo "$matrix" | jq); then
             echo "WARNING: expected output may not be valid JSON"
           fi
-          echo '${{ toJSON(matrix) }}'
-          echo "$matrix" >> "$GITHUB_OUTPUT"
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
-      - name: Print outputs
-        id: validate-json
-        run: |
-          echo '${{ toJson(steps.fetch-python-versions.outputs.matrix) }}'
-
-  pre-release:
+  test-builds:
+    name: "Perform build: Python"
     needs: [parse-project-metadata]
     runs-on: "ubuntu-latest"
     continue-on-error: true
@@ -48,8 +45,7 @@ jobs:
     if: github.event.pull_request.merged == false
     strategy:
       fail-fast: false
-      # yamllint disable-line rule:line-length
-      matrix: ${{fromJson(needs.parse-project-metadata.outputs.matrix)}}
+      matrix: ${{ fromJson(needs.parse-project-metadata.outputs.matrix) }}
 
     steps:
       - name: "Populate environment variables"
